@@ -15,11 +15,16 @@ Coke-mouse is a habit management system that gamifies the balance between positi
 
 ## Technology
 
-Coke-mouse is built with Python, utilizing frameworks and libraries suited for web development and data manipulation.
+Coke-mouse uses a small [Svelte](https://svelte.dev) + [Vite](https://vitejs.dev) app.
 
 ## Getting Started
 
-Instructions on how to install, configure, and use Coke-mouse will be added here.
+```bash
+npm ci
+npm run dev
+npm test
+npm run build
+```
 
 ## Contributing
 
