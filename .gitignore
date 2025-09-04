@@ -122,3 +122,5 @@ dmypy.json
 # Node
 node_modules/
 dist/
+!src/lib/
+!src/lib/**
