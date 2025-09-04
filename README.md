@@ -26,6 +26,10 @@ npm test
 npm run build
 ```
 
+## Persistence & Export/Import
+
+State is saved in IndexedDB using [localforage](https://github.com/localForage/localForage). Use the **Export JSON** button to download your habits and **Import JSON** to restore them from a file.
+
 ## Contributing
 
 Interested in contributing? Great! Please read our contributing guidelines for details on our code of conduct and the process for submitting pull requests.
