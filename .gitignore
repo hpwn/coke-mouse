@@ -118,3 +118,7 @@ dmypy.json
 .pyre/
 .vs/VSWorkspaceState.json
 .vs/coke-mouse/v17/.wsuo
+
+# Node
+node_modules/
+dist/
