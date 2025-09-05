@@ -1,6 +1,6 @@
-import App from './App.svelte';
+import Page from './routes/+page.svelte';
 
-const app = new App({
+const app = new Page({
   target: document.getElementById('app') as HTMLElement
 });
 
