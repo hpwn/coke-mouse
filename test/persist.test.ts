@@ -13,7 +13,10 @@ vi.mock('localforage', () => {
 
 describe('persist', () => {
   it('round-trips JSON data', async () => {
-    const data = { habits: [{ id: 'a', name: 'test', logs: [{ ts: 1 }] }] };
+    const data = {
+      habits: [{ id: 'a', name: 'test', createdAt: '2024', goalSeconds: 86400, streak: 0 }],
+      logs: [{ habitId: 'a', at: '2024', deltaSeconds: 5 }]
+    };
     await save(data, 'x');
     const loaded = await load<typeof data>('x');
     expect(loaded).toEqual(data);
