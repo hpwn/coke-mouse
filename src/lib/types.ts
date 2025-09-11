@@ -8,9 +8,11 @@ export type Habit = {
 };
 
 export type Log = {
+  id: string;
   habitId: string;
   at: string;
   deltaSeconds?: number;
+  note?: string;
 };
 
 export type SaveData = {

@@ -1,36 +1,30 @@
 <script lang="ts">
-  import type { Log } from './types';
-  import { logs as storeLogs } from './store';
+  import { positive, type PositiveHabitLog } from './positive';
   import EditLogDialog from './EditLogDialog.svelte';
   import ConfirmDeleteLogDialog from './ConfirmDeleteLogDialog.svelte';
   import { isToday, isYesterday, yyyyMmDd } from './date';
 
-  export let logs: Log[] = [];
+  export let habitId: string;
 
   let editDialog: EditLogDialog;
   let deleteDialog: ConfirmDeleteLogDialog;
-  let editing: Log | null = null;
-  let deleting: Log | null = null;
+  let editing: PositiveHabitLog | null = null;
+  let deleting: PositiveHabitLog | null = null;
 
+  $: $positive;
+  $: logs = positive.getLogs(habitId);
   $: groups = groupLogs(logs);
 
-  function note(l: Log): string {
-    return l.note ?? 'logged';
-  }
-
-  function groupLogs(ls: Log[]) {
-    const sorted = [...ls].sort(
-      (a, b) => new Date(b.at).getTime() - new Date(a.at).getTime()
-    );
-    const out: { label: string; logs: Log[] }[] = [];
-    let current: { label: string; logs: Log[] } | null = null;
+  function groupLogs(ls: PositiveHabitLog[]) {
+    const sorted = [...ls].sort((a, b) => b.ts - a.ts);
+    const out: { label: string; logs: PositiveHabitLog[] }[] = [];
+    let current: { label: string; logs: PositiveHabitLog[] } | null = null;
     for (const l of sorted) {
-      const ts = new Date(l.at).getTime();
-      const label = isToday(ts)
+      const label = isToday(l.ts)
         ? 'Today'
-        : isYesterday(ts)
+        : isYesterday(l.ts)
         ? 'Yesterday'
-        : yyyyMmDd(ts);
+        : yyyyMmDd(l.ts);
       if (!current || current.label !== label) {
         current && out.push(current);
         current = { label, logs: [l] };
@@ -42,23 +36,23 @@
     return out;
   }
 
-  function openEdit(l: Log) {
+  function openEdit(l: PositiveHabitLog) {
     editing = l;
-    editDialog.open(l.note ?? '');
+    editDialog.open(l.note);
   }
   function saveEdit(e: CustomEvent<string>) {
     if (editing) {
-      storeLogs.editLog(editing.id, e.detail);
+      positive.editLog(editing.id, e.detail);
       editing = null;
     }
   }
-  function openDelete(l: Log) {
+  function openDelete(l: PositiveHabitLog) {
     deleting = l;
     deleteDialog.open();
   }
   function confirmDelete() {
     if (deleting) {
-      storeLogs.deleteLog(deleting.id);
+      positive.deleteLog(deleting.id);
       deleting = null;
     }
   }
@@ -79,7 +73,7 @@
     <ul>
       {#each g.logs as l (l.id)}
         <li>
-          {new Date(l.at).toLocaleString()} — {note(l)}
+          {new Date(l.ts).toLocaleString()} — {l.note}
           <button aria-label="Edit log" on:click={() => openEdit(l)}>✏️</button>
           <button aria-label="Delete log" on:click={() => openDelete(l)}>🗑️</button>
         </li>
