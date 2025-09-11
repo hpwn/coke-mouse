@@ -131,7 +131,12 @@ export const habits = {
 };
 
 export const logs = {
-  subscribe: logsStore.subscribe
+  subscribe: logsStore.subscribe,
+  getTimeline(habitId: string): Log[] {
+    return get(logsStore)
+      .filter(l => l.habitId === habitId)
+      .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
+  }
 };
 
 export function formatDuration(seconds: number): string {
