@@ -2,6 +2,7 @@ import { writable, get } from 'svelte/store';
 import { v4 as uuid } from 'uuid';
 import { load, save } from './persist';
 import type { Habit, Log, SaveData } from './types';
+import { browser } from '$app/environment';
 
 interface OldLog { ts: number; diff?: number }
 interface OldHabit { id: string; name: string; logs: OldLog[] }
@@ -46,11 +47,13 @@ function migrate(data: any): SaveData {
 const habitsStore = writable<Habit[]>([]);
 const logsStore = writable<Log[]>([]);
 
-load<any>().then(d => {
-  const m = migrate(d);
-  habitsStore.set(m.habits);
-  logsStore.set(m.logs);
-});
+if (browser) {
+  load<any>().then(d => {
+    const m = migrate(d);
+    habitsStore.set(m.habits);
+    logsStore.set(m.logs);
+  });
+}
 
 function persist() {
   save({ habits: get(habitsStore), logs: get(logsStore) });

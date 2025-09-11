@@ -1,9 +1,9 @@
+import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
-import { svelte } from '@sveltejs/vite-plugin-svelte';
+
+const BASE_PATH = process.env.BASE_PATH ?? '';
 
 export default defineConfig({
-  plugins: [svelte()],
-  test: {
-    environment: 'node'
-  }
+  base: BASE_PATH,
+  plugins: [sveltekit()]
 });
