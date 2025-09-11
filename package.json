@@ -5,8 +5,9 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build && vite build --ssr",
-    "preview": "vite preview",
-    "test": "svelte-kit sync && vitest run"
+    "preview": "vite preview --base=/coke-mouse",
+    "test": "svelte-kit sync && vitest run",
+    "postinstall": "bash -lc 'nvm use' || true"
   },
   "devDependencies": {
     "@sveltejs/adapter-static": "^3.0.4",
