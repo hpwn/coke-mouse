@@ -117,6 +117,11 @@ export const habits = {
     habitsStore.update(hs => hs.map(h => (h.id === id ? { ...h, streak: 0 } : h)));
     persist();
   },
+  deleteHabit(id: string) {
+    habitsStore.update(hs => hs.filter(h => h.id !== id));
+    logsStore.update(ls => ls.filter(l => l.habitId !== id));
+    persist();
+  },
   replace(data: SaveData) {
     const m = migrate(data);
     habitsStore.set(m.habits);

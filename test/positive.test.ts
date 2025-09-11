@@ -2,12 +2,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { positive } from '../src/lib/positive';
 import { get } from 'svelte/store';
 
-vi.mock('../src/lib/persist', () => ({ load: async () => null, save: async () => {} }));
+const saveMock = vi.hoisted(() => vi.fn());
+vi.mock('../src/lib/persist', () => ({ load: async () => null, save: saveMock }));
 
 describe('positive store', () => {
   beforeEach(() => {
     positive.replace({ habits: [], logs: [] });
     vi.useRealTimers();
+    saveMock.mockClear();
   });
 
   it('initializes empty state', () => {
@@ -46,4 +48,38 @@ describe('positive store', () => {
     expect(logs[0].note).toBe('second');
     expect(logs[1].note).toBe('first');
   });
+
+  it('deleteHabit removes habit', () => {
+    positive.add('a');
+    const id = Object.keys(get(positive).habits)[0];
+    positive.deleteHabit(id);
+    expect(get(positive).habits[id]).toBeUndefined();
+  });
+
+  it('deleteHabit removes all associated logs', () => {
+    vi.useFakeTimers();
+    positive.add('a');
+    const id = Object.keys(get(positive).habits)[0];
+    positive.log(id, 'note');
+    positive.deleteHabit(id);
+    vi.runAllTimers();
+    const state = get(positive);
+    expect(Object.values(state.logs).some(l => l.habitId === id)).toBe(false);
+    expect(state.habitLogIndex[id]).toBeUndefined();
+  });
+
+  it('deleteHabit leaves other habits/logs untouched', () => {
+    vi.useFakeTimers();
+    positive.add('a');
+    positive.add('b');
+    const ids = Object.keys(get(positive).habits);
+    positive.log(ids[0], 'n1');
+    positive.log(ids[1], 'n2');
+    positive.deleteHabit(ids[0]);
+    vi.runAllTimers();
+    const state = get(positive);
+    expect(state.habits[ids[1]]).toBeDefined();
+    expect(Object.values(state.logs).some(l => l.habitId === ids[1])).toBe(true);
+  });
+
 });
