@@ -9,8 +9,11 @@ Coke-mouse is a habit management system that gamifies the balance between positi
 ## Features
 
 - **Negative Habits** 📉: Track time between indulgences and stretch goals as you improve.
-- **Negative Timelines** 🕒: View scrollable histories of negative habit logs (read-only).
+- **Negative Timelines** 🕒: View and manage histories of negative habit logs.
 - **Positive Habits** 📈: Create daily habits and log successes with free-form notes and timestamps.
+- **Log Edit/Delete** ✏️🗑️: Modify or remove individual entries in both positive and negative timelines.
+- **Date Grouping** 📅: Timelines group entries by Today, Yesterday, or YYYY-MM-DD.
+- **Per-habit CSV Export** 📄: Download logs for any habit as a CSV file.
 - **Export/Import** 🔄: Save or load all habit data as JSON for backup or transfer.
 - **Delete Habits** 🗑️: Remove a habit and all its logs via a protected confirmation dialog.
 

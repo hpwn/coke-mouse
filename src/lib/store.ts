@@ -23,6 +23,7 @@ function migrate(data: any): SaveData {
     });
     const logs: Log[] = data.flatMap((h: OldHabit) =>
       h.logs.map(l => ({
+        id: uuid(),
         habitId: h.id,
         at: new Date(l.ts).toISOString(),
         deltaSeconds: l.diff !== undefined ? Math.round(l.diff / 1000) : undefined
@@ -40,7 +41,15 @@ function migrate(data: any): SaveData {
         lastLoggedAt: h.lastLoggedAt
       }))
     : [];
-  const logs: Log[] = Array.isArray(data.logs) ? data.logs : [];
+  const logs: Log[] = Array.isArray(data.logs)
+    ? data.logs.map((l: any) => ({
+        id: l.id ?? uuid(),
+        habitId: l.habitId,
+        at: l.at,
+        deltaSeconds: l.deltaSeconds,
+        note: l.note
+      }))
+    : [];
   return { habits, logs };
 }
 
@@ -96,15 +105,20 @@ export const habits = {
             streak = 0;
             goal = clamp(Math.round(goal * 0.9));
           }
-          entry = { habitId: id, at: now.toISOString(), deltaSeconds: delta };
+          entry = {
+            id: uuid(),
+            habitId: id,
+            at: now.toISOString(),
+            deltaSeconds: delta
+          };
           return { ...h, goalSeconds: goal, streak, lastLoggedAt: now.toISOString() };
         } else {
-          entry = { habitId: id, at: now.toISOString() };
+          entry = { id: uuid(), habitId: id, at: now.toISOString() };
           return { ...h, lastLoggedAt: now.toISOString() };
         }
       })
     );
-    if (entry) logsStore.update(ls => [...ls, entry]);
+    if (entry) logsStore.update(ls => [...ls, entry!]);
     persist();
   },
   editGoal(id: string, seconds: number) {
@@ -136,6 +150,35 @@ export const logs = {
     return get(logsStore)
       .filter(l => l.habitId === habitId)
       .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
+  },
+  editLog(logId: string, note: string) {
+    logsStore.update(ls => ls.map(l => (l.id === logId ? { ...l, note } : l)));
+    persist();
+  },
+  deleteLog(logId: string) {
+    let removed: Log | undefined;
+    logsStore.update(ls => {
+      const arr = ls.filter(l => {
+        if (l.id === logId) {
+          removed = l;
+          return false;
+        }
+        return true;
+      });
+      return arr;
+    });
+    if (removed) {
+      habitsStore.update(hs =>
+        hs.map(h => {
+          if (h.id !== removed!.habitId) return h;
+          const timeline = get(logsStore)
+            .filter(l => l.habitId === h.id)
+            .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
+          return { ...h, lastLoggedAt: timeline[0]?.at };
+        })
+      );
+    }
+    persist();
   }
 };
 
@@ -165,9 +208,11 @@ export function validate(data: any): data is SaveData {
     (h.lastLoggedAt === undefined || typeof h.lastLoggedAt === 'string')
   );
   const logsOk = data.logs.every((l: any) =>
+    typeof l.id === 'string' &&
     typeof l.habitId === 'string' &&
     typeof l.at === 'string' &&
-    (l.deltaSeconds === undefined || typeof l.deltaSeconds === 'number')
+    (l.deltaSeconds === undefined || typeof l.deltaSeconds === 'number') &&
+    (l.note === undefined || typeof l.note === 'string')
   );
   return habitsOk && logsOk;
 }

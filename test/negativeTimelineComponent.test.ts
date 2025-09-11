@@ -46,7 +46,7 @@ describe('Negative timeline components', () => {
     const at = new Date('2025-09-10T21:43:00Z').toISOString();
     const note = 'oops';
     const { getByText } = render(NegativeTimeline, {
-      props: { logs: [{ habitId: 'h', at, note } as any] }
+      props: { logs: [{ id: '1', habitId: 'h', at, note }] }
     });
     const ts = new Date(at).toLocaleString();
     getByText(`${ts} — ${note}`);

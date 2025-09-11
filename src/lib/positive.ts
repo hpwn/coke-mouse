@@ -91,6 +91,24 @@ export const positive = {
     });
     scheduleSave();
   },
+  editLog(logId: string, note: string) {
+    store.update(s => {
+      if (s.logs[logId]) s.logs[logId].note = note;
+      return s;
+    });
+    scheduleSave();
+  },
+  deleteLog(logId: string) {
+    store.update(s => {
+      const log = s.logs[logId];
+      if (!log) return s;
+      delete s.logs[logId];
+      const arr = s.habitLogIndex[log.habitId] ?? [];
+      s.habitLogIndex[log.habitId] = arr.filter(id => id !== logId);
+      return s;
+    });
+    scheduleSave();
+  },
   deleteHabit(habitId: string) {
     store.update(s => {
       if (!s.habits[habitId]) {

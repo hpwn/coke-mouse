@@ -6,6 +6,8 @@ import type { Habit } from '../lib/types';
 import { browser } from '$app/environment';
 import ConfirmDeleteHabitDialog from '../lib/ConfirmDeleteHabitDialog.svelte';
 import NegativeHabitItem from '../lib/NegativeHabitItem.svelte';
+import PositiveTimeline from '../lib/PositiveTimeline.svelte';
+import { logsToCsv } from '../lib/csv';
 
 let tab: 'positive' | 'negative' = 'negative';
 if (browser) {
@@ -94,6 +96,29 @@ function cancelLog() {
 
 function toggleTimeline(id: string) {
   show[id] = !show[id];
+}
+
+function exportPositiveCsv(habit: { id: string; name: string }) {
+  const logs = positive.getLogs(habit.id).map(l => ({
+    id: l.id,
+    habitId: l.habitId,
+    ts: l.ts,
+    note: l.note
+  }));
+  const csv = logsToCsv(logs);
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const slug = habit.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const d = new Date();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const fname = `cokemouse-positive-${slug}_${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(
+    d.getDate()
+  )}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}.csv`;
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fname;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 function openDelete(type: 'positive' | 'negative', id: string, name: string) {
@@ -207,14 +232,11 @@ function importJson(event: Event) {
       <div class="habit">
         <strong>{habit.name}</strong>
         <button on:click={() => openLog(habit)}>Log</button>
-        <button on:click={() => toggleTimeline(habit.id)}>{show[habit.id] ? 'Hide' : 'Show'} timeline</button>
         <button on:click={() => openDelete('positive', habit.id, habit.name)}>Delete</button>
+        <button on:click={() => exportPositiveCsv(habit)}>Export CSV</button>
+        <button on:click={() => toggleTimeline(habit.id)}>{show[habit.id] ? 'Hide' : 'Show'} timeline</button>
         {#if show[habit.id]}
-          <ul>
-            {#each positive.getLogs(habit.id) as l (l.id)}
-              <li>{new Date(l.ts).toLocaleString()}: {l.note}</li>
-            {/each}
-          </ul>
+          <PositiveTimeline habitId={habit.id} />
         {/if}
       </div>
     {/each}
