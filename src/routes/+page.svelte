@@ -5,6 +5,7 @@ import { exportAll, importAll } from '../lib/exportImport';
 import type { Habit } from '../lib/types';
 import { browser } from '$app/environment';
 import ConfirmDeleteHabitDialog from '../lib/ConfirmDeleteHabitDialog.svelte';
+import NegativeHabitItem from '../lib/NegativeHabitItem.svelte';
 
 let tab: 'positive' | 'negative' = 'negative';
 if (browser) {
@@ -50,18 +51,6 @@ function saveGoal() {
 
 function resetStreak(id: string) {
   habits.resetStreak(id);
-}
-
-function sinceLast(h: Habit): string {
-  if (!h.lastLoggedAt) return '—';
-  const elapsed = (Date.now() - new Date(h.lastLoggedAt).getTime()) / 1000;
-  return formatDuration(elapsed);
-}
-
-function elapsed(h: Habit): number {
-  if (!h.lastLoggedAt) return 0;
-  const e = (Date.now() - new Date(h.lastLoggedAt).getTime()) / 1000;
-  return Math.min(e, h.goalSeconds);
 }
 
 // positive vars
@@ -238,17 +227,13 @@ function importJson(event: Event) {
     </form>
 
     {#each $habits as habit (habit.id)}
-      <div class="habit">
-        <strong>{habit.name}</strong>
-        <div>Since last: {sinceLast(habit)}</div>
-        <div>Goal: {formatDuration(habit.goalSeconds)}</div>
-        <progress max={habit.goalSeconds} value={elapsed(habit)}></progress>
-        <div>Streak: {habit.streak}</div>
-        <button on:click={() => logHabit(habit.id)}>Log</button>
-        <button on:click={() => openEdit(habit)}>Edit Goal</button>
-        <button on:click={() => resetStreak(habit.id)}>Reset Streak</button>
-        <button on:click={() => openDelete('negative', habit.id, habit.name)}>Delete</button>
-      </div>
+      <NegativeHabitItem
+        {habit}
+        {logHabit}
+        {openEdit}
+        {resetStreak}
+        openDelete={(id, name) => openDelete('negative', id, name)}
+      />
     {/each}
   </div>
 {/if}
@@ -259,7 +244,6 @@ form { margin-bottom: 1rem; }
 .habit { margin-top: 1rem; }
 .tabs { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
 [role="tab"][aria-selected="true"] { font-weight: bold; }
-progress { width: 100%; }
 .toast {
   position: fixed;
   bottom: 1rem;
