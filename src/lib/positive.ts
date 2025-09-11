@@ -91,6 +91,20 @@ export const positive = {
     });
     scheduleSave();
   },
+  deleteHabit(habitId: string) {
+    store.update(s => {
+      if (!s.habits[habitId]) {
+        if (import.meta.env.DEV) console.warn('deleteHabit: missing', habitId);
+        return s;
+      }
+      delete s.habits[habitId];
+      const ids = s.habitLogIndex[habitId] ?? [];
+      ids.forEach(id => delete s.logs[id]);
+      delete s.habitLogIndex[habitId];
+      return s;
+    });
+    scheduleSave();
+  },
   getLogs(habitId: string): PositiveHabitLog[] {
     const state = get(store);
     const ids = state.habitLogIndex[habitId] ?? [];

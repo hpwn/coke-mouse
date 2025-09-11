@@ -4,6 +4,7 @@ import { positive } from '../lib/positive';
 import { exportAll, importAll } from '../lib/exportImport';
 import type { Habit } from '../lib/types';
 import { browser } from '$app/environment';
+import ConfirmDeleteHabitDialog from '../lib/ConfirmDeleteHabitDialog.svelte';
 
 let tab: 'positive' | 'negative' = 'negative';
 if (browser) {
@@ -70,6 +71,13 @@ let logging: { id: string; name: string } | null = null;
 let note = '';
 const show: Record<string, boolean> = {};
 
+// delete vars
+let deleteDialog: ConfirmDeleteHabitDialog;
+let toDelete: { type: 'positive' | 'negative'; id: string; name: string } | null = null;
+let lastFocused: HTMLElement | null = null;
+let toast = '';
+let toastTimer: any;
+
 function addPositive() {
   if (pName.trim()) {
     positive.add(pName.trim());
@@ -97,6 +105,34 @@ function cancelLog() {
 
 function toggleTimeline(id: string) {
   show[id] = !show[id];
+}
+
+function openDelete(type: 'positive' | 'negative', id: string, name: string) {
+  toDelete = { type, id, name };
+  lastFocused = document.activeElement as HTMLElement;
+  deleteDialog.open();
+}
+
+function cancelDelete() {
+  deleteDialog.close();
+  toDelete = null;
+  lastFocused?.focus();
+}
+
+function confirmDelete() {
+  if (!toDelete) return;
+  if (toDelete.type === 'positive') {
+    positive.deleteHabit(toDelete.id);
+    show[toDelete.id] = false;
+  } else {
+    habits.deleteHabit(toDelete.id);
+  }
+  toast = `Deleted '${toDelete.name}'`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => (toast = ''), 3000);
+  deleteDialog.close();
+  toDelete = null;
+  lastFocused?.focus();
 }
 
 // export / import
@@ -151,10 +187,21 @@ function importJson(event: Event) {
   </form>
 </dialog>
 
+<ConfirmDeleteHabitDialog
+  bind:this={deleteDialog}
+  habitName={toDelete?.name ?? ''}
+  on:cancel={cancelDelete}
+  on:confirm={confirmDelete}
+/>
+
 <div class="controls">
   <button on:click={exportJson}>Export JSON</button>
   <input type="file" accept="application/json" on:change={importJson} />
 </div>
+
+{#if toast}
+  <div class="toast" role="status">{toast}</div>
+{/if}
 
 <div role="tablist" class="tabs">
   <button role="tab" aria-selected={tab === 'positive'} aria-controls="positive-panel" on:click={() => switchTab('positive')}>Positive</button>
@@ -172,6 +219,7 @@ function importJson(event: Event) {
         <strong>{habit.name}</strong>
         <button on:click={() => openLog(habit)}>Log</button>
         <button on:click={() => toggleTimeline(habit.id)}>{show[habit.id] ? 'Hide' : 'Show'} timeline</button>
+        <button on:click={() => openDelete('positive', habit.id, habit.name)}>Delete</button>
         {#if show[habit.id]}
           <ul>
             {#each positive.getLogs(habit.id) as l (l.id)}
@@ -199,6 +247,7 @@ function importJson(event: Event) {
         <button on:click={() => logHabit(habit.id)}>Log</button>
         <button on:click={() => openEdit(habit)}>Edit Goal</button>
         <button on:click={() => resetStreak(habit.id)}>Reset Streak</button>
+        <button on:click={() => openDelete('negative', habit.id, habit.name)}>Delete</button>
       </div>
     {/each}
   </div>
@@ -211,4 +260,13 @@ form { margin-bottom: 1rem; }
 .tabs { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
 [role="tab"][aria-selected="true"] { font-weight: bold; }
 progress { width: 100%; }
+.toast {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  background: #333;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+}
 </style>
