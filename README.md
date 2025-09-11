@@ -8,10 +8,9 @@ Coke-mouse is a habit management system that gamifies the balance between positi
 
 ## Features
 
-- **Habit Tracking** 📊: Log and track time spent on various positive habits.
-- **Point System** 🏆: Earn points based on the completion of positive habits.
-- **Rewards** 🎁: Spend points on selected 'negative' habits as a form of reward.
-- **Dynamic Point Valuation** 📉: Over time, the point value can change, encouraging better habit management.
+- **Negative Habits** 📉: Track time between indulgences and stretch goals as you improve.
+- **Positive Habits** 📈: Create daily habits and log successes with free-form notes and timestamps.
+- **Export/Import** 🔄: Save or load all habit data as JSON for backup or transfer.
 
 ## Technology
 
@@ -29,6 +28,19 @@ npm run build
 ## Persistence & Export/Import
 
 State is saved in IndexedDB using [localforage](https://github.com/localForage/localForage). Use the **Export JSON** button to download your habits and **Import JSON** to restore them from a file.
+
+Export files are versioned. The current format is `version: 2` and includes both negative and positive sections:
+
+```json
+{
+  "version": 2,
+  "exportedAt": 0,
+  "negative": { "habits": [], "logs": [] },
+  "positive": { "habits": [], "logs": [] }
+}
+```
+
+Older `version: 1` exports contained only the negative section and can still be imported.
 
 ## Contributing
 
