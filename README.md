@@ -56,3 +56,7 @@ Interested in contributing? Great! Please read our contributing guidelines for d
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Developer docs
+- See [Codex Working Contract](./docs/CODEX_WORKING_CONTRACT.md)
+- See [QA Playbook](./docs/QA_PLAYBOOK.md)
