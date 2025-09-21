@@ -10,7 +10,8 @@ describe('csv utilities', () => {
     ]);
     Date.prototype.toLocaleString = orig;
     expect(csv).toBe(
-      'log_id,habit_id,epoch_ms,iso_utc,local_iso,note\r\n1,h,0,1970-01-01T00:00:00.000Z,LOCAL,"a,""b""\nline"\r\n'
+      'log_id,habit_id,epoch_ms,iso_utc,local_iso,note,metric_kind,metric_minutes,metric_normalized,metric_display,metric_tz_offset\r\n' +
+        '1,h,0,1970-01-01T00:00:00.000Z,LOCAL,"a,""b""\nline",,,,,\r\n'
     );
   });
 });
