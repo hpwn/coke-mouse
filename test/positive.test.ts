@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { positive } from '../src/lib/positive';
 import { get } from 'svelte/store';
+import { buildTimeOfDayMetric } from '../src/lib/metric';
 
 const saveMock = vi.hoisted(() => vi.fn());
 vi.mock('../src/lib/persist', () => ({ load: async () => null, save: saveMock }));
@@ -14,7 +15,7 @@ describe('positive store', () => {
 
   it('initializes empty state', () => {
     const state = get(positive);
-    expect(state).toEqual({ habits: {}, logs: {}, habitLogIndex: {}, version: 1 });
+    expect(state).toEqual({ habits: {}, logs: {}, habitLogIndex: {}, version: 2 });
   });
 
   it('createHabit adds habit with name + createdAt', () => {
@@ -47,6 +48,25 @@ describe('positive store', () => {
     const logs = positive.getLogs(id);
     expect(logs[0].note).toBe('second');
     expect(logs[1].note).toBe('first');
+  });
+
+  it('stores time-of-day metric when logging', () => {
+    vi.useFakeTimers();
+    const metricDate = new Date('2024-01-02T23:45:00');
+    positive.add('Sleep', { kind: 'timeOfDay', wrapHour: 18 });
+    const id = Object.keys(get(positive).habits)[0];
+    const habit = get(positive).habits[id];
+    positive.log(id, 'bed', {
+      metric: buildTimeOfDayMetric(metricDate, habit.metric),
+      ts: metricDate.getTime()
+    });
+    const state = get(positive);
+    const logId = state.habitLogIndex[id][0];
+    expect(state.logs[logId].metric).toMatchObject({
+      kind: 'timeOfDay',
+      minutesSinceMidnight: metricDate.getHours() * 60 + metricDate.getMinutes()
+    });
+    expect(state.logs[logId].ts).toBe(metricDate.getTime());
   });
 
   it('deleteHabit removes habit', () => {

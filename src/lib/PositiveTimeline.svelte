@@ -73,7 +73,16 @@
     <ul>
       {#each g.logs as l (l.id)}
         <li>
-          {new Date(l.ts).toLocaleString()} — {l.note}
+          <span class="when" title={new Date(l.ts).toLocaleString()}>
+            {#if l.metric?.kind === 'timeOfDay'}
+              <span class="metric-chip">🕒 {l.metric.display}</span>
+            {:else}
+              {new Date(l.ts).toLocaleString()}
+            {/if}
+          </span>
+          {#if l.note}
+            <span class="note">— {l.note}</span>
+          {/if}
           <button aria-label="Edit log" on:click={() => openEdit(l)}>✏️</button>
           <button aria-label="Delete log" on:click={() => openDelete(l)}>🗑️</button>
         </li>
@@ -92,9 +101,22 @@
     display: flex;
     gap: 0.25rem;
     align-items: center;
+    flex-wrap: wrap;
   }
   li button {
     margin-left: 0.25rem;
+  }
+  .metric-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.15rem;
+    background: #eef2ff;
+    border-radius: 999px;
+    padding: 0 0.4rem;
+    font-size: 0.9em;
+  }
+  .note {
+    flex: 1 1 auto;
   }
   h3 {
     margin-top: 0.5rem;

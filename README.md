@@ -49,6 +49,14 @@ Export files are versioned. The current format is `version: 2` and includes both
 
 Older `version: 1` exports contained only the negative section and can still be imported.
 
+## Metrics
+
+- **Time of Day (Bedtime)**: mark a Positive habit to track nightly bedtimes.
+  - Actions: **Log Now** captures the current local time, **Log Time…** lets you enter a specific date and HH:MM.
+  - Stats: Last, Best (7d), and Tonight’s target (Last - 5m, never earlier than an hour before the wrap).
+  - Comparison uses a 6PM wrap by default so 11:00 PM outranks 2:00 AM.
+  - CSV export adds metric_kind, metric_minutes, metric_normalized, metric_display, metric_tz_offset columns.
+
 ## Contributing
 
 Interested in contributing? Great! Please read our contributing guidelines for details on our code of conduct and the process for submitting pull requests.
