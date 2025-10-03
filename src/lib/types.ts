@@ -1,3 +1,5 @@
+import type { HabitStatus } from './habitStatus';
+
 export type Habit = {
   id: string;
   name: string;
@@ -5,6 +7,7 @@ export type Habit = {
   goalSeconds: number; // target interval (default 86400)
   streak: number;      // consecutive goal hits
   lastLoggedAt?: string; // cache of last log timestamp (optional)
+  status?: HabitStatus;
 };
 
 export type Log = {
