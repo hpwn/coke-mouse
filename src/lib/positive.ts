@@ -3,6 +3,7 @@ import { v4 as uuid } from 'uuid';
 import { load, save } from './persist';
 import { browser } from '$app/environment';
 import { clampWrapHour, normalizeByWrap, minutesToDisplay } from './metric';
+import { DEFAULT_HABIT_STATUS, type HabitStatus, sanitizeHabitStatus } from './habitStatus';
 import type { HabitMetricConfig, TimeOfDayMetric } from './metric';
 
 export type PositiveHabitId = string;
@@ -12,6 +13,7 @@ export interface PositiveHabit {
   name: string;
   createdAt: number;
   metric?: HabitMetricConfig;
+  status?: HabitStatus;
 }
 
 export interface PositiveHabitLog {
@@ -102,6 +104,7 @@ function sanitizeHabit(input: any): PositiveHabit | null {
   const metric = sanitizeMetricConfig(input.metric);
   const habit: PositiveHabit = { id, name, createdAt };
   if (metric) habit.metric = metric;
+  habit.status = sanitizeHabitStatus(input.status);
   return habit;
 }
 
@@ -183,8 +186,30 @@ export const positive = {
     const id = uuid();
     const metricCfg = sanitizeMetricConfig(metric);
     store.update(s => {
-      const habit: PositiveHabit = { id, name, createdAt: Date.now() };
+      const habit: PositiveHabit = {
+        id,
+        name,
+        createdAt: Date.now(),
+        status: DEFAULT_HABIT_STATUS
+      };
       if (metricCfg) habit.metric = metricCfg;
+      s.habits[id] = habit;
+      s.habitLogIndex[id] = s.habitLogIndex[id] ?? [];
+      return s;
+    });
+    scheduleSave();
+  },
+  quickAddQueuedHabit(name: string) {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    const id = uuid();
+    store.update(s => {
+      const habit: PositiveHabit = {
+        id,
+        name: trimmed,
+        createdAt: Date.now(),
+        status: 'queued'
+      };
       s.habits[id] = habit;
       s.habitLogIndex[id] = s.habitLogIndex[id] ?? [];
       return s;
@@ -207,6 +232,14 @@ export const positive = {
       } else {
         delete s.habits[id].metric;
       }
+      return s;
+    });
+    scheduleSave();
+  },
+  setHabitStatus(id: string, status: HabitStatus) {
+    store.update(s => {
+      if (!s.habits[id]) return s;
+      s.habits[id].status = sanitizeHabitStatus(status);
       return s;
     });
     scheduleSave();
@@ -284,7 +317,12 @@ export const positive = {
     const habitMap: Record<string, PositiveHabit> = {};
     data.habits.forEach(h => {
       const metric = sanitizeMetricConfig(h.metric);
-      const habit: PositiveHabit = { id: h.id, name: h.name, createdAt: h.createdAt };
+      const habit: PositiveHabit = {
+        id: h.id,
+        name: h.name,
+        createdAt: h.createdAt,
+        status: sanitizeHabitStatus(h.status)
+      };
       if (metric) habit.metric = metric;
       habitMap[h.id] = habit;
     });

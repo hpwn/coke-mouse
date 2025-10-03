@@ -2,10 +2,24 @@ import { writable, get } from 'svelte/store';
 import { v4 as uuid } from 'uuid';
 import { load, save } from './persist';
 import type { Habit, Log, SaveData } from './types';
+import { DEFAULT_HABIT_STATUS, sanitizeHabitStatus } from './habitStatus';
 import { browser } from '$app/environment';
 
 interface OldLog { ts: number; diff?: number }
 interface OldHabit { id: string; name: string; logs: OldLog[] }
+
+function normalizeHabit(input: any): Habit {
+  const status = sanitizeHabitStatus(input?.status);
+  return {
+    id: input.id,
+    name: input.name,
+    createdAt: input.createdAt,
+    goalSeconds: input.goalSeconds,
+    streak: input.streak,
+    lastLoggedAt: input.lastLoggedAt,
+    status
+  };
+}
 
 function migrate(data: any): SaveData {
   if (!data) return { habits: [], logs: [] };
@@ -18,7 +32,8 @@ function migrate(data: any): SaveData {
         createdAt: new Date().toISOString(),
         goalSeconds: 86400,
         streak: 0,
-        lastLoggedAt: last ? new Date(last.ts).toISOString() : undefined
+        lastLoggedAt: last ? new Date(last.ts).toISOString() : undefined,
+        status: DEFAULT_HABIT_STATUS
       };
     });
     const logs: Log[] = data.flatMap((h: OldHabit) =>
@@ -32,14 +47,17 @@ function migrate(data: any): SaveData {
     return { habits, logs };
   }
   const habits: Habit[] = Array.isArray(data.habits)
-    ? data.habits.map((h: any) => ({
-        id: h.id,
-        name: h.name,
-        createdAt: h.createdAt ?? new Date().toISOString(),
-        goalSeconds: h.goalSeconds ?? 86400,
-        streak: h.streak ?? 0,
-        lastLoggedAt: h.lastLoggedAt
-      }))
+    ? data.habits.map((h: any) =>
+        normalizeHabit({
+          id: h.id,
+          name: h.name,
+          createdAt: h.createdAt ?? new Date().toISOString(),
+          goalSeconds: h.goalSeconds ?? 86400,
+          streak: h.streak ?? 0,
+          lastLoggedAt: h.lastLoggedAt,
+          status: sanitizeHabitStatus(h.status)
+        })
+      )
     : [];
   const logs: Log[] = Array.isArray(data.logs)
     ? data.logs.map((l: any) => ({
@@ -79,7 +97,23 @@ export const habits = {
         name,
         createdAt: new Date().toISOString(),
         goalSeconds: 86400,
-        streak: 0
+        streak: 0,
+        status: DEFAULT_HABIT_STATUS
+      };
+      return [...hs, h];
+    });
+    persist();
+  },
+  quickAddQueuedHabit(name: string) {
+    if (!name.trim()) return;
+    habitsStore.update(hs => {
+      const h: Habit = {
+        id: uuid(),
+        name: name.trim(),
+        createdAt: new Date().toISOString(),
+        goalSeconds: 86400,
+        streak: 0,
+        status: 'queued'
       };
       return [...hs, h];
     });
@@ -111,10 +145,20 @@ export const habits = {
             at: now.toISOString(),
             deltaSeconds: delta
           };
-          return { ...h, goalSeconds: goal, streak, lastLoggedAt: now.toISOString() };
+          return {
+            ...h,
+            goalSeconds: goal,
+            streak,
+            lastLoggedAt: now.toISOString(),
+            status: h.status ?? DEFAULT_HABIT_STATUS
+          };
         } else {
           entry = { id: uuid(), habitId: id, at: now.toISOString() };
-          return { ...h, lastLoggedAt: now.toISOString() };
+          return {
+            ...h,
+            lastLoggedAt: now.toISOString(),
+            status: h.status ?? DEFAULT_HABIT_STATUS
+          };
         }
       })
     );
@@ -123,12 +167,32 @@ export const habits = {
   },
   editGoal(id: string, seconds: number) {
     habitsStore.update(hs =>
-      hs.map(h => (h.id === id ? { ...h, goalSeconds: clamp(Math.round(seconds)) } : h))
+      hs.map(h =>
+        h.id === id
+          ? {
+              ...h,
+              goalSeconds: clamp(Math.round(seconds)),
+              status: h.status ?? DEFAULT_HABIT_STATUS
+            }
+          : h
+      )
     );
     persist();
   },
   resetStreak(id: string) {
-    habitsStore.update(hs => hs.map(h => (h.id === id ? { ...h, streak: 0 } : h)));
+    habitsStore.update(hs =>
+      hs.map(h =>
+        h.id === id
+          ? { ...h, streak: 0, status: h.status ?? DEFAULT_HABIT_STATUS }
+          : h
+      )
+    );
+    persist();
+  },
+  setHabitStatus(habitId: string, status: 'queued' | 'active' | 'paused' | 'archived') {
+    habitsStore.update(hs =>
+      hs.map(h => (h.id === habitId ? { ...h, status: sanitizeHabitStatus(status) } : h))
+    );
     persist();
   },
   deleteHabit(id: string) {
@@ -138,7 +202,7 @@ export const habits = {
   },
   replace(data: SaveData) {
     const m = migrate(data);
-    habitsStore.set(m.habits);
+    habitsStore.set(m.habits.map(h => ({ ...h, status: h.status ?? DEFAULT_HABIT_STATUS })));
     logsStore.set(m.logs);
     persist();
   }
@@ -174,7 +238,11 @@ export const logs = {
           const timeline = get(logsStore)
             .filter(l => l.habitId === h.id)
             .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
-          return { ...h, lastLoggedAt: timeline[0]?.at };
+          return {
+            ...h,
+            lastLoggedAt: timeline[0]?.at,
+            status: h.status ?? DEFAULT_HABIT_STATUS
+          };
         })
       );
     }
@@ -205,7 +273,8 @@ export function validate(data: any): data is SaveData {
     typeof h.createdAt === 'string' &&
     typeof h.goalSeconds === 'number' &&
     typeof h.streak === 'number' &&
-    (h.lastLoggedAt === undefined || typeof h.lastLoggedAt === 'string')
+    (h.lastLoggedAt === undefined || typeof h.lastLoggedAt === 'string') &&
+    (h.status === undefined || typeof h.status === 'string')
   );
   const logsOk = data.logs.every((l: any) =>
     typeof l.id === 'string' &&

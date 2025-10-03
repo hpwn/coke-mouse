@@ -21,6 +21,8 @@ import {
   isBetterTimeOfDay,
   type TimeOfDayMetric
 } from '../lib/metric';
+import { DEFAULT_HABIT_STATUS, HABIT_STATUSES, type HabitStatus } from '../lib/habitStatus';
+import { shouldShowDailyAddOne, shouldShowWeeklyStartOne } from '../lib/nudges';
 
 let tab: 'positive' | 'negative' = 'negative';
 if (browser) {
@@ -30,6 +32,49 @@ if (browser) {
 function switchTab(t: 'positive' | 'negative') {
   tab = t;
   if (browser) localStorage.setItem('cm:lastTab', t);
+}
+
+type HabitFilter = 'active' | 'queued' | 'archived' | 'all';
+const filterOptions: HabitFilter[] = ['active', 'queued', 'archived', 'all'];
+
+let positiveFilter: HabitFilter = 'active';
+let negativeFilter: HabitFilter = 'active';
+
+let quickAddName = '';
+let quickAddSection: 'positive' | 'negative' = 'positive';
+
+function normalizeStatus(status?: HabitStatus): HabitStatus {
+  return status ?? DEFAULT_HABIT_STATUS;
+}
+
+function statusLabel(status: HabitStatus): string {
+  return status.charAt(0).toUpperCase() + status.slice(1);
+}
+
+function matchesFilter(status: HabitStatus | undefined, filter: HabitFilter): boolean {
+  if (filter === 'all') return true;
+  const normalized = normalizeStatus(status);
+  if (filter === 'active') return normalized === 'active';
+  if (filter === 'queued') return normalized === 'queued';
+  if (filter === 'archived') return normalized === 'archived';
+  return false;
+}
+
+function sectionLabel(section: 'positive' | 'negative'): string {
+  return section === 'positive' ? 'Positive' : 'Negative';
+}
+
+type PipelineHabit = {
+  id: string;
+  name: string;
+  status: HabitStatus;
+  section: 'positive' | 'negative';
+  createdAt: number;
+};
+
+function filterLabel(filter: HabitFilter): string {
+  if (filter === 'all') return 'All';
+  return statusLabel(filter);
 }
 
 // negative vars
@@ -68,6 +113,27 @@ function resetStreak(id: string) {
   habits.resetStreak(id);
 }
 
+function quickAddQueued() {
+  const trimmed = quickAddName.trim();
+  if (!trimmed) return;
+  if (quickAddSection === 'positive') {
+    positive.quickAddQueuedHabit(trimmed);
+  } else {
+    habits.quickAddQueuedHabit(trimmed);
+  }
+  showToastMessage(`Queued '${trimmed}' (${sectionLabel(quickAddSection)})`);
+  quickAddName = '';
+}
+
+function promoteQueuedHabit(habit: PipelineHabit) {
+  if (habit.section === 'positive') {
+    positive.setHabitStatus(habit.id, 'active');
+  } else {
+    habits.setHabitStatus(habit.id, 'active');
+  }
+  showToastMessage(`Started '${habit.name}' (${sectionLabel(habit.section)})`);
+}
+
 // positive vars
 let pName = '';
 let pMetricEnabled = false;
@@ -89,6 +155,12 @@ let toDelete: { type: 'positive' | 'negative'; id: string; name: string } | null
 let lastFocused: HTMLElement | null = null;
 let toast = '';
 let toastTimer: any;
+
+function showToastMessage(message: string) {
+  toast = message;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => (toast = ''), 3000);
+}
 
 const pad = (n: number) => String(n).padStart(2, '0');
 const toDateInputValue = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -263,6 +335,11 @@ function handleDirectionChange(event: Event, habit: PositiveHabitModel) {
   updateHabitDirection(habit, input.checked);
 }
 
+function handlePositiveStatusChange(event: Event, habit: PositiveHabitModel) {
+  const select = event.currentTarget as HTMLSelectElement;
+  positive.setHabitStatus(habit.id, select.value as HabitStatus);
+}
+
 function openDelete(type: 'positive' | 'negative', id: string, name: string) {
   toDelete = { type, id, name };
   lastFocused = document.activeElement as HTMLElement;
@@ -283,9 +360,7 @@ function confirmDelete() {
   } else {
     habits.deleteHabit(toDelete.id);
   }
-  toast = `Deleted '${toDelete.name}'`;
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => (toast = ''), 3000);
+  showToastMessage(`Deleted '${toDelete.name}'`);
   deleteDialog.close();
   toDelete = null;
   lastFocused?.focus();
@@ -335,6 +410,39 @@ $: manualPreview =
         return parsed && logging ? buildTimeOfDayMetric(parsed, logging.metric).display : '';
       })()
     : '';
+
+$: positiveHabitsList = Object.values($positive.habits);
+$: negativeHabitsList = $habits;
+$: filteredPositiveHabits = positiveHabitsList.filter(h => matchesFilter(h.status, positiveFilter));
+$: filteredNegativeHabits = negativeHabitsList.filter(h => matchesFilter(h.status, negativeFilter));
+$: pipelineHabits = [
+  ...positiveHabitsList.map(habit => ({
+    id: habit.id,
+    name: habit.name,
+    status: normalizeStatus(habit.status),
+    section: 'positive' as const,
+    createdAt: habit.createdAt
+  })),
+  ...negativeHabitsList.map(habit => ({
+    id: habit.id,
+    name: habit.name,
+    status: normalizeStatus(habit.status),
+    section: 'negative' as const,
+    createdAt: new Date(habit.createdAt).getTime()
+  }))
+];
+$: queuedHabits = pipelineHabits
+  .filter(h => h.status === 'queued')
+  .sort((a, b) => b.createdAt - a.createdAt);
+$: activeCount = pipelineHabits.filter(h => h.status === 'active').length;
+$: showAddOneNudge = shouldShowDailyAddOne({
+  positiveHabits: positiveHabitsList,
+  negativeHabits: negativeHabitsList
+});
+$: showStartOneNudge = shouldShowWeeklyStartOne({
+  positiveHabits: positiveHabitsList,
+  negativeHabits: negativeHabitsList
+});
 
 function buildMetricSummaries(state: PositiveState): Record<string, MetricSummary> {
   const result: Record<string, MetricSummary> = {};
@@ -439,6 +547,52 @@ function buildMetricSummaries(state: PositiveState): Record<string, MetricSummar
   <div class="toast" role="status">{toast}</div>
 {/if}
 
+<div class="today-bar" aria-label="Today overview">
+  <div class:due={showAddOneNudge} class="today-card add-one">
+    <h3>Add one habit</h3>
+    <form on:submit|preventDefault={quickAddQueued}>
+      <input
+        bind:value={quickAddName}
+        placeholder="Name"
+        aria-label="Habit name"
+      />
+      <select bind:value={quickAddSection} aria-label="Section">
+        <option value="positive">Positive</option>
+        <option value="negative">Negative</option>
+      </select>
+      <button type="submit">Queue</button>
+    </form>
+    {#if showAddOneNudge}
+      <p class="nudge-text">No new habits today yet.</p>
+    {/if}
+  </div>
+
+  {#if showStartOneNudge && queuedHabits.length}
+    <div class="today-card start-one due">
+      <h3>Start one habit</h3>
+      <p class="nudge-text">Promote a queued habit to active.</p>
+      <ul>
+        {#each queuedHabits as habit (habit.id)}
+          <li>
+            <button type="button" on:click={() => promoteQueuedHabit(habit)}>
+              <span>{habit.name}</span>
+              <span class="queued-meta">{sectionLabel(habit.section)}</span>
+            </button>
+          </li>
+        {/each}
+      </ul>
+    </div>
+  {/if}
+
+  <div class="today-card active-count" class:warning={activeCount > 3}>
+    <h3>Active: {activeCount}</h3>
+    <p class="nudge-text">Limit: 3</p>
+    {#if activeCount > 3}
+      <p class="nudge-text">Consider pausing a habit.</p>
+    {/if}
+  </div>
+</div>
+
 <div role="tablist" class="tabs">
   <button role="tab" aria-selected={tab === 'positive'} aria-controls="positive-panel" on:click={() => switchTab('positive')}>Positive</button>
   <button role="tab" aria-selected={tab === 'negative'} aria-controls="negative-panel" on:click={() => switchTab('negative')}>Negative</button>
@@ -463,10 +617,40 @@ function buildMetricSummaries(state: PositiveState): Record<string, MetricSummar
       {/if}
       <button type="submit">Add</button>
     </form>
-    {#each Object.values($positive.habits) as habit (habit.id)}
+    <div class="filter-toggle" role="group" aria-label="Filter positive habits">
+      {#each filterOptions as option}
+        <button
+          type="button"
+          class:selected={positiveFilter === option}
+          on:click={() => (positiveFilter = option)}
+        >
+          {filterLabel(option)}
+        </button>
+      {/each}
+    </div>
+    {#if !filteredPositiveHabits.length}
+      <p class="empty-state">No habits match this filter.</p>
+    {/if}
+    {#each filteredPositiveHabits as habit (habit.id)}
       <div class="habit">
         <div class="habit-header">
-          <strong>{habit.name}</strong>
+          <div class="habit-title">
+            <strong>{habit.name}</strong>
+            <span class={`status-pill status-${normalizeStatus(habit.status)}`}>
+              {statusLabel(normalizeStatus(habit.status))}
+            </span>
+          </div>
+          <label class="status-select">
+            <span class="sr-only">Status</span>
+            <select
+              value={normalizeStatus(habit.status)}
+              on:change={event => handlePositiveStatusChange(event, habit)}
+            >
+              {#each HABIT_STATUSES as status}
+                <option value={status}>{statusLabel(status)}</option>
+              {/each}
+            </select>
+          </label>
           <div class="habit-actions">
             {#if habit.metric?.kind === 'timeOfDay'}
               <button on:click={() => openLogNow(habit)}>Log Now</button>
@@ -528,13 +712,28 @@ function buildMetricSummaries(state: PositiveState): Record<string, MetricSummar
       <button type="submit">Add</button>
     </form>
 
-    {#each $habits as habit (habit.id)}
+    <div class="filter-toggle" role="group" aria-label="Filter negative habits">
+      {#each filterOptions as option}
+        <button
+          type="button"
+          class:selected={negativeFilter === option}
+          on:click={() => (negativeFilter = option)}
+        >
+          {filterLabel(option)}
+        </button>
+      {/each}
+    </div>
+    {#if !filteredNegativeHabits.length}
+      <p class="empty-state">No habits match this filter.</p>
+    {/if}
+    {#each filteredNegativeHabits as habit (habit.id)}
       <NegativeHabitItem
         {habit}
         {logHabit}
         {openEdit}
         {resetStreak}
         openDelete={(id, name) => openDelete('negative', id, name)}
+        setStatus={(id, status) => habits.setHabitStatus(id, status)}
       />
     {/each}
   </div>
@@ -543,8 +742,123 @@ function buildMetricSummaries(state: PositiveState): Record<string, MetricSummar
 <style>
 form { margin-bottom: 1rem; }
 .controls { margin-bottom: 1rem; }
+.today-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.today-card {
+  flex: 1 1 220px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.today-card.due {
+  border-color: #a855f7;
+  box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.2);
+}
+
+.today-card h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.today-card form {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin: 0;
+}
+
+.today-card form input {
+  flex: 1 1 140px;
+}
+
+.today-card form select {
+  flex: 0 1 120px;
+}
+
+.today-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.today-card li button {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+}
+
+.today-card li button:hover {
+  background: #f3f4f6;
+}
+
+.today-card.active-count.warning {
+  border-color: #f97316;
+  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.2);
+}
+
+.queued-meta {
+  font-size: 0.8rem;
+  color: #6b7280;
+  text-transform: capitalize;
+}
+
+.nudge-text {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
 .habit { margin-top: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #e5e7eb; }
-.habit-header { display: flex; flex-direction: column; gap: 0.5rem; }
+.habit-header { display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-start; }
+.habit-title { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.status-pill {
+  font-size: 0.8rem;
+  text-transform: capitalize;
+  background: #e5e7eb;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+}
+.status-pill.status-queued { background: #ede9fe; color: #5b21b6; }
+.status-pill.status-active { background: #dcfce7; color: #15803d; }
+.status-pill.status-paused { background: #fef3c7; color: #92400e; }
+.status-pill.status-archived { background: #f3f4f6; color: #374151; }
+.status-select {
+  align-self: flex-start;
+}
+.status-select select {
+  font-size: 0.85rem;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 .habit-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 .metric-config { margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem; }
 .metric-settings { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
@@ -554,6 +868,26 @@ form { margin-bottom: 1rem; }
 .metric-manual { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
 .metric-preview { margin: 0.25rem 0 0.5rem; font-size: 0.9em; color: #4b5563; }
 .error { color: #b91c1c; margin: 0.5rem 0; }
+.filter-toggle { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 0.5rem 0 0; }
+.filter-toggle button {
+  border: 1px solid #d1d5db;
+  background: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  text-transform: capitalize;
+}
+.filter-toggle button.selected {
+  background: #1d4ed8;
+  color: white;
+  border-color: #1d4ed8;
+}
+.empty-state {
+  margin: 0.5rem 0;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
 .tabs { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
 [role="tab"][aria-selected="true"] { font-weight: bold; }
 .toast {

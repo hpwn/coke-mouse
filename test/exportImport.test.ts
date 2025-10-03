@@ -51,4 +51,36 @@ describe('export/import', () => {
     expect(ok).toBe(false);
     expect(get(positive)).toEqual(before);
   });
+
+  it('export includes habit statuses', () => {
+    habits.add('neg');
+    const neg = get(habits)[0];
+    habits.setHabitStatus(neg.id, 'paused');
+    positive.add('pos');
+    const posId = Object.keys(get(positive).habits)[0];
+    positive.setHabitStatus(posId, 'queued');
+    const data = exportAll();
+    expect(data.negative.habits[0].status).toBe('paused');
+    expect(data.positive.habits[0].status).toBe('queued');
+  });
+
+  it('import defaults missing statuses to active', () => {
+    const payload = {
+      version: 2,
+      exportedAt: 0,
+      negative: {
+        habits: [{ id: 'n', name: 'neg', createdAt: '2023-01-01T00:00:00Z', goalSeconds: 86400, streak: 0 }],
+        logs: []
+      },
+      positive: {
+        habits: [{ id: 'p', name: 'pos', createdAt: 1 }],
+        logs: []
+      }
+    };
+    const ok = importAll(payload);
+    expect(ok).toBe(true);
+    expect(get(habits)[0].status).toBe('active');
+    const posState = get(positive);
+    expect(posState.habits['p'].status).toBe('active');
+  });
 });
