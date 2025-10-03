@@ -10,6 +10,25 @@ describe('positive store log actions', () => {
     vi.useFakeTimers();
   });
 
+  it('quickAddQueuedHabit creates queued habit', () => {
+    positive.quickAddQueuedHabit('queued');
+    const state = get(positive);
+    const habit = Object.values(state.habits)[0];
+    expect(habit.status).toBe('queued');
+  });
+
+  it('setHabitStatus persists through replace', () => {
+    positive.add('persist');
+    const id = Object.keys(get(positive).habits)[0];
+    positive.setHabitStatus(id, 'paused');
+    const snapshot = get(positive);
+    positive.replace({
+      habits: Object.values(snapshot.habits).map(h => ({ ...h })),
+      logs: Object.values(snapshot.logs).map(l => ({ ...l }))
+    });
+    expect(get(positive).habits[id].status).toBe('paused');
+  });
+
   it('editLog updates note and persists', () => {
     positive.add('h');
     const id = Object.keys(get(positive).habits)[0];

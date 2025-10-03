@@ -3,6 +3,7 @@ import { habits, logs, validate as validateNegative } from './store';
 import { positive, type PositiveHabit, type PositiveHabitLog } from './positive';
 import type { HabitMetricConfig, TimeOfDayMetric } from './metric';
 import type { Habit, Log } from './types';
+import { isHabitStatus } from './habitStatus';
 
 export interface ExportPayloadV2 {
   version: 2;
@@ -53,7 +54,8 @@ function validatePositive(data: any): data is { habits: PositiveHabit[]; logs: P
       typeof h.id === 'string' &&
       typeof h.name === 'string' &&
       typeof h.createdAt === 'number' &&
-      (h.metric === undefined || isHabitMetricConfig(h.metric))
+      (h.metric === undefined || isHabitMetricConfig(h.metric)) &&
+      (h.status === undefined || isHabitStatus(h.status))
   );
   const logsOk = data.logs.every(
     (l: any) =>

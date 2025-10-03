@@ -12,6 +12,21 @@ describe('negative store log actions', () => {
     vi.useFakeTimers();
   });
 
+  it('quickAddQueuedHabit creates queued habit', () => {
+    habits.quickAddQueuedHabit('queued');
+    const state = get(habits);
+    expect(state[0].status).toBe('queued');
+  });
+
+  it('setHabitStatus persists through replace', () => {
+    habits.add('persist');
+    const id = get(habits)[0].id;
+    habits.setHabitStatus(id, 'paused');
+    const snapshot = { habits: get(habits).map(h => ({ ...h })), logs: get(logs).map(l => ({ ...l })) };
+    habits.replace(snapshot);
+    expect(get(habits)[0].status).toBe('paused');
+  });
+
   it('editLog updates note', () => {
     habits.add('a');
     const habit = get(habits)[0];
