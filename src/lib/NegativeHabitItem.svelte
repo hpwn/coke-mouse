@@ -39,7 +39,7 @@ export let setStatus: (id: string, status: HabitStatus) => void;
       note: l.note ?? ''
     }));
     const csv = logsToCsv(rows);
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const slug = habit.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     const d = new Date();
