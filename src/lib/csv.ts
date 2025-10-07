@@ -1,5 +1,6 @@
-import type { TimeOfDayMetric } from './metric';
 import { metricCsvHeader, metricCsvRow } from './csv_metric_appendix';
+import type { TimeOfDayMetric } from './metric';
+import { withUtf8BOM } from './csv_bom';
 
 export function escapeCsv(value: string): string {
   if (value === undefined || value === null) value = '';
@@ -32,5 +33,6 @@ export function logsToCsv(logs: CsvLog[]): string {
       ...metricRow
     ].join(',');
   });
-  return [header, ...rows].join('\r\n') + '\r\n';
+  const csv = [header, ...rows].join('\r\n') + '\r\n';
+  return withUtf8BOM(csv);
 }

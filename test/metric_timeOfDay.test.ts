@@ -3,7 +3,9 @@ import {
   minutesSinceMidnight,
   normalizeByWrap,
   buildTimeOfDayMetric,
-  isBetterTimeOfDay
+  isBetterTimeOfDay,
+  computeBedtimeTargetMinutes,
+  minutesToDisplay
 } from '../src/lib/metric';
 
 function withLocal(h: number, m: number, y = 2025, mon = 0, d = 1) {
@@ -26,5 +28,17 @@ describe('time-of-day metric helpers', () => {
     const a = buildTimeOfDayMetric(withLocal(23, 0));
     const b = buildTimeOfDayMetric(withLocal(2, 0));
     expect(isBetterTimeOfDay(a, b)).toBe(true);
+  });
+
+  test('computeBedtimeTargetMinutes subtracts delta and clamps at floor', () => {
+    const last = 22 * 60 + 1;
+    const target = computeBedtimeTargetMinutes(last);
+    expect(target).toBe(21 * 60 + 56);
+    expect(minutesToDisplay(target)).toMatch(/9:56|21:56/);
+  });
+
+  test('computeBedtimeTargetMinutes never earlier than floor', () => {
+    const last = 17 * 60 + 3;
+    expect(computeBedtimeTargetMinutes(last)).toBe(17 * 60);
   });
 });

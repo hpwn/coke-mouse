@@ -56,6 +56,16 @@ export function minutesToDisplay(minutes: number): string {
   return formatTimeHHMM(d);
 }
 
+export function computeBedtimeTargetMinutes(
+  lastMinutes: number,
+  deltaMin = 5,
+  floorMinutes = 17 * 60
+): number {
+  const roundedLast = Math.max(0, Math.round(lastMinutes));
+  const candidate = roundedLast - deltaMin;
+  return Math.max(floorMinutes, candidate);
+}
+
 export function buildTimeOfDayMetric(date: Date, cfg?: HabitMetricConfig): TimeOfDayMetric {
   const wrapHour = clampWrapHour(cfg?.wrapHour) ?? 18;
   const minutes = minutesSinceMidnight(date);

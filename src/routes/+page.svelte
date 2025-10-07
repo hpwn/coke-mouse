@@ -16,8 +16,7 @@ import { logsToCsv } from '../lib/csv';
 import {
   buildTimeOfDayMetric,
   clampWrapHour,
-  denormalizeByWrap,
-  normalizeByWrap,
+  computeBedtimeTargetMinutes,
   isBetterTimeOfDay,
   type TimeOfDayMetric
 } from '../lib/metric';
@@ -276,7 +275,7 @@ function exportPositiveCsv(habit: PositiveHabitModel) {
     metric: l.metric
   }));
   const csv = logsToCsv(logs);
-  const blob = new Blob([csv], { type: 'text/csv' });
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const slug = habit.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
   const d = new Date();
@@ -475,10 +474,11 @@ function buildMetricSummaries(state: PositiveState): Record<string, MetricSummar
     }
     const wrapHour = habit.metric.wrapHour ?? 18;
     const minTargetMinutes = ((wrapHour + 23) % 24) * 60;
-    const minTargetNormalized = normalizeByWrap(minTargetMinutes, wrapHour);
-    let targetNormalized = summary.last.normalizedMinutes - 5;
-    if (targetNormalized < minTargetNormalized) targetNormalized = minTargetNormalized;
-    const targetMinutes = denormalizeByWrap(targetNormalized, wrapHour);
+    const targetMinutes = computeBedtimeTargetMinutes(
+      summary.last.minutesSinceMidnight,
+      5,
+      minTargetMinutes
+    );
     const targetDate = new Date();
     targetDate.setHours(0, 0, 0, 0);
     targetDate.setMinutes(targetMinutes);
