@@ -1,4 +1,5 @@
 import Page from './routes/+page.svelte';
+import './styles/theme.css';
 
 const app = new Page({
   target: document.getElementById('app') as HTMLElement
