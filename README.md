@@ -37,6 +37,12 @@ npm run build
 - Buttons progressively gain icons + tooltips; text hides on small screens but remains accessible.
 - To force an icon on any custom button, add `data-icon="play|plus|clock|trash|download|list|target|timer|log"` and an `aria-label`.
 
+## Dark mode (SvelteKit)
+
+- Bootstrap sets `data-theme` in **src/app.html** before paint.
+- Global tokens load in **src/routes/+layout.svelte** via `../styles/theme.css`.
+- Floating toggle rendered by **$lib/components/ThemeToggle.svelte**.
+
 ## Persistence & Export/Import
 
 State is saved in IndexedDB using [localforage](https://github.com/localForage/localForage). Use the **Export JSON** button to download your habits and **Import JSON** to restore them from a file.
