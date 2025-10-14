@@ -36,6 +36,8 @@ npm run build
 - Dark mode follows system with a toggle (bottom-right).
 - Buttons progressively gain icons + tooltips; text hides on small screens but remains accessible.
 - To force an icon on any custom button, add `data-icon="play|plus|clock|trash|download|list|target|timer|log"` and an `aria-label`.
+- Global component styles live in **src/styles/components.css** (inputs, selects, buttons, chips, tooltips, timeline).
+- To theme a new control, prefer tokens: `--input-bg`, `--input-border`, `--surface-1`, `--border`, `--focus-ring`.
 
 ## Dark mode (SvelteKit)
 
