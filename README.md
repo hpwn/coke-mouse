@@ -45,6 +45,13 @@ npm run build
 - Global tokens load in **src/routes/+layout.svelte** via `../styles/theme.css`.
 - Floating toggle rendered by **$lib/components/ThemeToggle.svelte**.
 
+## PWA
+
+- Uses **@vite-pwa/sveltekit** with `start_url`/`scope` set to `.` so GitHub Pages base paths work.
+- Icons are generated from **static/icon.svg**.
+- An install hint appears when `beforeinstallprompt` fires. You can remove it later if desired.
+- Service worker set to **autoUpdate**; assets & pages cached for offline use.
+
 ## Persistence & Export/Import
 
 State is saved in IndexedDB using [localforage](https://github.com/localForage/localForage). Use the **Export JSON** button to download your habits and **Import JSON** to restore them from a file.
