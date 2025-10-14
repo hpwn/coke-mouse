@@ -584,7 +584,7 @@ function buildMetricSummaries(state: PositiveState): Record<string, MetricSummar
     </div>
   {/if}
 
-  <div class="today-card active-count" class:warning={activeCount > 3}>
+  <div class="today-card active-count status-card" class:warning={activeCount > 3}>
     <h3>Active: {activeCount}</h3>
     <p class="nudge-text">Limit: 3</p>
     {#if activeCount > 3}
@@ -617,11 +617,14 @@ function buildMetricSummaries(state: PositiveState): Record<string, MetricSummar
       {/if}
       <button type="submit">Add</button>
     </form>
-    <div class="filter-toggle" role="group" aria-label="Filter positive habits">
+    <div class="filter-toggle segmented" role="group" aria-label="Filter positive habits">
       {#each filterOptions as option}
         <button
           type="button"
+          class="seg-btn"
           class:selected={positiveFilter === option}
+          aria-pressed={positiveFilter === option}
+          class:is-active={positiveFilter === option}
           on:click={() => (positiveFilter = option)}
         >
           {filterLabel(option)}
@@ -693,9 +696,9 @@ function buildMetricSummaries(state: PositiveState): Record<string, MetricSummar
               </label>
             </div>
             <div class="metric-summary">
-              <span class="cm-chip">Last: {metricSummaries[habit.id]?.last?.display ?? '—'}</span>
-              <span class="cm-chip">Best (7d): {metricSummaries[habit.id]?.best7d?.display ?? '—'}</span>
-              <span class="cm-chip">Tonight’s target: {metricSummaries[habit.id]?.target?.display ?? '—'}</span>
+              <span class="stat-pill">Last: {metricSummaries[habit.id]?.last?.display ?? '—'}</span>
+              <span class="stat-pill">Best (7d): {metricSummaries[habit.id]?.best7d?.display ?? '—'}</span>
+              <span class="stat-pill">Tonight’s target: {metricSummaries[habit.id]?.target?.display ?? '—'}</span>
             </div>
           {/if}
         </div>
@@ -712,11 +715,14 @@ function buildMetricSummaries(state: PositiveState): Record<string, MetricSummar
       <button type="submit">Add</button>
     </form>
 
-    <div class="filter-toggle" role="group" aria-label="Filter negative habits">
+    <div class="filter-toggle segmented" role="group" aria-label="Filter negative habits">
       {#each filterOptions as option}
         <button
           type="button"
+          class="seg-btn"
           class:selected={negativeFilter === option}
+          aria-pressed={negativeFilter === option}
+          class:is-active={negativeFilter === option}
           on:click={() => (negativeFilter = option)}
         >
           {filterLabel(option)}
@@ -751,9 +757,9 @@ form { margin-bottom: 1rem; }
 
 .today-card {
   flex: 1 1 220px;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   padding: 0.75rem;
   display: flex;
   flex-direction: column;
@@ -761,8 +767,9 @@ form { margin-bottom: 1rem; }
 }
 
 .today-card.due {
-  border-color: #a855f7;
-  box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.2);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.25);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
 .today-card h3 {
@@ -801,14 +808,15 @@ form { margin-bottom: 1rem; }
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border);
   border-radius: 6px;
-  background: white;
+  background: var(--surface-0);
   cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
 .today-card li button:hover {
-  background: #f3f4f6;
+  border-color: var(--accent);
 }
 
 .today-card.active-count.warning {
@@ -834,14 +842,18 @@ form { margin-bottom: 1rem; }
 .status-pill {
   font-size: 0.8rem;
   text-transform: capitalize;
-  background: #e5e7eb;
-  padding: 0.1rem 0.5rem;
+  background: var(--chip);
+  color: var(--chip-fg);
+  border: 1px solid var(--border);
   border-radius: 999px;
+  padding: 0.2rem 0.6rem;
 }
-.status-pill.status-queued { background: #ede9fe; color: #5b21b6; }
-.status-pill.status-active { background: #dcfce7; color: #15803d; }
-.status-pill.status-paused { background: #fef3c7; color: #92400e; }
-.status-pill.status-archived { background: #f3f4f6; color: #374151; }
+.status-pill.status-queued { color: var(--accent); border-color: var(--accent); }
+.status-pill.status-active { color: #16a34a; border-color: #16a34a; }
+.status-pill.status-paused { color: #f59e0b; border-color: #f59e0b; }
+.status-pill.status-archived { color: var(--muted); border-color: var(--border); }
+:global(:root[data-theme='dark']) .status-pill.status-active { color: #4ade80; border-color: #4ade80; }
+:global(:root[data-theme='dark']) .status-pill.status-paused { color: #facc15; border-color: #facc15; }
 .status-select {
   align-self: flex-start;
 }
@@ -863,26 +875,13 @@ form { margin-bottom: 1rem; }
 .metric-config { margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem; }
 .metric-settings { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
 .metric-summary { display: flex; gap: 0.75rem; flex-wrap: wrap; font-size: 0.9em; }
-.metric-summary span { background: #f3f4f6; padding: 0.25rem 0.5rem; border-radius: 999px; }
+.metric-summary span { display: inline-flex; }
 .metric-toggle { display: flex; gap: 0.5rem; align-items: center; margin-top: 0.5rem; }
 .metric-manual { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
 .metric-preview { margin: 0.25rem 0 0.5rem; font-size: 0.9em; color: #4b5563; }
 .error { color: #b91c1c; margin: 0.5rem 0; }
 .filter-toggle { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 0.5rem 0 0; }
-.filter-toggle button {
-  border: 1px solid #d1d5db;
-  background: white;
-  padding: 0.25rem 0.75rem;
-  border-radius: 999px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  text-transform: capitalize;
-}
-.filter-toggle button.selected {
-  background: #1d4ed8;
-  color: white;
-  border-color: #1d4ed8;
-}
+.filter-toggle .seg-btn { text-transform: capitalize; font-size: 0.85rem; }
 .empty-state {
   margin: 0.5rem 0;
   color: #6b7280;
