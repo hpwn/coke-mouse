@@ -275,10 +275,28 @@ select:focus-visible{ border-color:var(--focus-ring); box-shadow:var(--focus-rin
 }
 
 /* Ensure generic buttons never inherit light background */
-:root[data-theme='dark'] button,
-:root[data-theme='dark'] .cm-btn,
-:root[data-theme='dark'] a[role='button'] {
-  background: var(--surface-1) !important;
-  color: var(--fg) !important;
-  border-color: var(--input-border) !important;
+:root[data-theme='dark'] button:not(:disabled):not([aria-disabled='true']),
+:root[data-theme='dark'] .cm-btn:not(:disabled):not([aria-disabled='true']),
+:root[data-theme='dark'] a[role='button']:not([aria-disabled='true']) {
+  background: var(--surface-1);
+  color: var(--fg);
+  border-color: var(--input-border);
+}
+
+/* --- Dark theme: let states win over base --- */
+:root[data-theme='dark'] button:hover:not(:disabled),
+:root[data-theme='dark'] .cm-btn:hover:not(:disabled),
+:root[data-theme='dark'] a[role='button']:hover:not([aria-disabled='true']) {
+  border-color: var(--accent);
+}
+
+:root[data-theme='dark'] button:disabled,
+:root[data-theme='dark'] .cm-btn:disabled,
+:root[data-theme='dark'] a[role='button'][aria-disabled='true'],
+:root[data-theme='dark'] [aria-disabled='true'].cm-btn {
+  background: var(--disabled-bg);
+  color: var(--disabled-fg);
+  border-color: var(--border);
+  cursor: not-allowed;
+  opacity: 0.9;
 }
