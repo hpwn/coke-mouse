@@ -300,3 +300,72 @@ select:focus-visible{ border-color:var(--focus-ring); box-shadow:var(--focus-rin
   cursor: not-allowed;
   opacity: 0.9;
 }
+
+/* === Segmented (filter) control ======================================= */
+.segmented{ display:flex; flex-wrap:wrap; gap:.5rem; align-items:center }
+.segmented .seg-btn{
+  background: var(--surface-1);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: .35rem .7rem;
+  line-height: 1;
+  transition: border-color .15s ease, background-color .15s ease;
+}
+.segmented .seg-btn:hover:not(:disabled){ border-color: var(--accent) }
+.segmented .seg-btn[aria-pressed="true"],
+.segmented .seg-btn.is-active{
+  background: var(--chip);
+  border-color: var(--accent);
+  color: var(--fg);
+}
+.segmented .seg-btn:disabled{
+  background: var(--disabled-bg);
+  color: var(--disabled-fg);
+  border-color: var(--border);
+  cursor: not-allowed;
+  opacity: .9;
+}
+
+/* stronger dark override just in case a legacy light style leaks */
+:root[data-theme="dark"] .segmented .seg-btn{
+  background: var(--surface-1);
+  color: var(--fg);
+  border-color: var(--input-border);
+}
+:root[data-theme="dark"] .segmented .seg-btn[aria-pressed="true"],
+:root[data-theme="dark"] .segmented .seg-btn.is-active{
+  background: var(--chip);
+  border-color: var(--accent);
+}
+
+/* Generic stat chips (covers small/inline spans) */
+.stat-pill, .kpi-pill, .summary-pill, .summary-chips span,
+small.kpi, small.summary, span.kpi, span.summary{
+  display:inline-flex; align-items:center; gap:.35rem;
+  background: var(--chip);
+  color: var(--chip-fg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: .25rem .6rem;
+}
+:root[data-theme="dark"] .stat-pill,
+:root[data-theme="dark"] .kpi-pill,
+:root[data-theme="dark"] .summary-pill,
+:root[data-theme="dark"] .summary-chips span,
+:root[data-theme="dark"] small.kpi,
+:root[data-theme="dark"] small.summary,
+:root[data-theme="dark"] span.kpi,
+:root[data-theme="dark"] span.summary{
+  background: var(--chip);
+  color: var(--chip-fg);
+  border-color: var(--input-border);
+}
+
+/* Status/aside card (matches the "Active: X" panel) */
+.aside-card, .status-card{
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: .9rem;
+}

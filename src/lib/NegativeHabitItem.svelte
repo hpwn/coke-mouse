@@ -80,7 +80,7 @@ export let setStatus: (id: string, status: HabitStatus) => void;
     </select>
   </label>
   {#if last && !show}
-    <div>Last: {new Date(last.at).toLocaleString()}</div>
+    <div class="stat-pill">Last: {new Date(last.at).toLocaleString()}</div>
   {/if}
   <div>Since last: {sinceLast()}</div>
   <div>Goal: {formatDuration(habit.goalSeconds)}</div>
@@ -117,29 +117,41 @@ export let setStatus: (id: string, status: HabitStatus) => void;
   .status-pill {
     font-size: 0.8rem;
     text-transform: capitalize;
-    background: #e5e7eb;
-    padding: 0.1rem 0.5rem;
+    background: var(--chip);
+    color: var(--chip-fg);
+    border: 1px solid var(--border);
     border-radius: 999px;
+    padding: 0.2rem 0.6rem;
   }
 
   .status-pill.status-queued {
-    background: #ede9fe;
-    color: #5b21b6;
+    color: var(--accent);
+    border-color: var(--accent);
   }
 
   .status-pill.status-active {
-    background: #dcfce7;
-    color: #15803d;
+    color: #16a34a;
+    border-color: #16a34a;
   }
 
   .status-pill.status-paused {
-    background: #fef3c7;
-    color: #92400e;
+    color: #f59e0b;
+    border-color: #f59e0b;
   }
 
   .status-pill.status-archived {
-    background: #f3f4f6;
-    color: #374151;
+    color: var(--muted);
+    border-color: var(--border);
+  }
+
+  :global(:root[data-theme='dark']) .status-pill.status-active {
+    color: #4ade80;
+    border-color: #4ade80;
+  }
+
+  :global(:root[data-theme='dark']) .status-pill.status-paused {
+    color: #facc15;
+    border-color: #facc15;
   }
 
   .status-select {
