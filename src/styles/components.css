@@ -1,0 +1,171 @@
+/* Cards/containers */
+.cm-card {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.9rem;
+  box-shadow: var(--shadow);
+}
+
+hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 0.75rem 0;
+}
+
+/* Buttons (inherit existing .cm-btn if present) */
+button,
+.cm-btn {
+  font: inherit;
+  color: var(--fg);
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.45rem 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  line-height: 1;
+}
+
+.cm-btn[data-variant='primary'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.cm-btn[data-variant='danger'] {
+  background: transparent;
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.cm-btn[data-variant='ghost'] {
+  background: transparent;
+}
+
+.cm-btn .cm-ico {
+  width: 1rem;
+  height: 1rem;
+  display: inline-block;
+}
+
+button:disabled,
+.cm-btn:disabled {
+  color: var(--disabled-fg);
+  background: var(--disabled-bg);
+  border-color: var(--border);
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+/* Inputs/selects/textarea */
+input[type='text'],
+input:not([type]),
+select,
+textarea {
+  background: var(--input-bg);
+  color: var(--input-fg);
+  border: 1px solid var(--input-border);
+  border-radius: 10px;
+  padding: 0.45rem 0.55rem;
+  outline: none;
+  min-height: 2rem;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--muted);
+}
+
+select {
+  appearance: auto;
+  -webkit-appearance: auto;
+}
+
+/* Focus ring (keyboard-visible) */
+:where(button, input, select, textarea):focus-visible {
+  border-color: var(--focus-ring);
+  box-shadow: var(--focus-ring-shadow);
+}
+
+/* Pills/chips/badges */
+.cm-chip,
+.badge,
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--chip);
+  color: var(--chip-fg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.25rem 0.6rem;
+}
+
+/* Tooltip (works with data-tooltip attribute) */
+.cm-tooltip {
+  position: relative;
+}
+
+.cm-tooltip[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--fg);
+  color: var(--bg);
+  padding: 0.25rem 0.45rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  z-index: 20;
+}
+
+/* Tabs/filters look consistent on dark */
+.tab,
+.filter,
+.segmented button {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  color: var(--fg);
+}
+
+.tab[aria-selected='true'],
+.filter[aria-pressed='true'] {
+  background: var(--chip);
+  border-color: var(--accent);
+}
+
+/* Timeline list items */
+.timeline-item {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.5rem 0.6rem;
+  margin: 0.35rem 0;
+}
+
+/* Positive/Negative section labels – keep contrast */
+.section-label {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+/* Theme toggle minor polish */
+.cm-theme-toggle {
+  position: fixed;
+  right: 0.9rem;
+  bottom: 0.9rem;
+  z-index: 50;
+  color: var(--fg);
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  border-radius: 999px;
+  padding: 0.5rem 0.7rem;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+}
