@@ -693,9 +693,9 @@ function buildMetricSummaries(state: PositiveState): Record<string, MetricSummar
               </label>
             </div>
             <div class="metric-summary">
-              <span>Last: {metricSummaries[habit.id]?.last?.display ?? '—'}</span>
-              <span>Best (7d): {metricSummaries[habit.id]?.best7d?.display ?? '—'}</span>
-              <span>Tonight’s target: {metricSummaries[habit.id]?.target?.display ?? '—'}</span>
+              <span class="cm-chip">Last: {metricSummaries[habit.id]?.last?.display ?? '—'}</span>
+              <span class="cm-chip">Best (7d): {metricSummaries[habit.id]?.best7d?.display ?? '—'}</span>
+              <span class="cm-chip">Tonight’s target: {metricSummaries[habit.id]?.target?.display ?? '—'}</span>
             </div>
           {/if}
         </div>

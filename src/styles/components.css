@@ -246,3 +246,39 @@ hr{ border-top:1px solid var(--border) }
 /* 9) Improve select contrast (esp. dark) */
 select{ color:var(--fg); background:var(--input-bg); border-color:var(--input-border) }
 select:focus-visible{ border-color:var(--focus-ring); box-shadow:var(--focus-ring-shadow) }
+
+/* === Strong dark-mode overrides (higher specificity) === */
+:root[data-theme='dark'] .cm-chip,
+:root[data-theme='dark'] .badge,
+:root[data-theme='dark'] .pill,
+:root[data-theme='dark'] .chip,
+:root[data-theme='dark'] .metric-chip,
+:root[data-theme='dark'] .stat,
+:root[data-theme='dark'] .time-chip {
+  background: var(--chip) !important;
+  color: var(--chip-fg) !important;
+  border-color: var(--input-border) !important;
+}
+
+/* Disabled chips still readable on dark */
+:root[data-theme='dark'] .cm-chip[aria-disabled='true'],
+:root[data-theme='dark'] .cm-chip.is-disabled {
+  background: var(--disabled-bg) !important;
+  color: var(--disabled-fg) !important;
+}
+
+/* File input button text legible on dark */
+:root[data-theme='dark'] input[type='file']::file-selector-button {
+  background: var(--surface-1) !important;
+  color: var(--fg) !important;
+  border-color: var(--input-border) !important;
+}
+
+/* Ensure generic buttons never inherit light background */
+:root[data-theme='dark'] button,
+:root[data-theme='dark'] .cm-btn,
+:root[data-theme='dark'] a[role='button'] {
+  background: var(--surface-1) !important;
+  color: var(--fg) !important;
+  border-color: var(--input-border) !important;
+}
