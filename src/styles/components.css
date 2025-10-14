@@ -193,3 +193,56 @@ select {
   box-shadow: var(--shadow);
   cursor: pointer;
 }
+
+/* ===== Dark-mode contrast polish (global) ===== */
+
+/* 1) Inputs/selects/textarea already themed; add file input button */
+input[type="file"]::file-selector-button{
+  background:var(--surface-1); color:var(--fg);
+  border:1px solid var(--border); border-radius:10px;
+  padding:.35rem .6rem; margin-right:.5rem; cursor:pointer;
+}
+input[type="file"]::file-selector-button:hover{ border-color:var(--accent) }
+
+/* 2) Checkbox/radio need a visible accent color on both themes */
+input[type="checkbox"], input[type="radio"]{ accent-color: var(--accent); }
+
+/* 3) Generic "pill/badge/stat" chips used across the app */
+.cm-chip, .badge, .pill, .stat, .kpi, .chip, .tag, .time-chip, .metric-chip{
+  display:inline-flex; align-items:center; gap:.35rem;
+  background:var(--chip); color:var(--chip-fg);
+  border:1px solid var(--border); border-radius:999px; padding:.25rem .6rem;
+}
+
+/* 4) Selected states for unclassed tab/filter buttons */
+[role="tab"][aria-selected="true"],
+button[aria-pressed="true"],
+button.is-active{
+  background:var(--chip);
+  border-color:var(--accent);
+  color:var(--fg);
+}
+
+/* 5) Ensure all generic buttons have readable foreground on dark */
+button, .cm-btn, a[role="button"]{ color:var(--fg); background:var(--surface-1); border-color:var(--border) }
+button:disabled, [aria-disabled="true"]{
+  color:var(--disabled-fg)!important; background:var(--disabled-bg)!important; border-color:var(--border)!important; opacity:.9;
+}
+
+/* 6) Field labels, legends, small help text */
+label, legend, .help, .hint{ color:var(--fg) }
+.help, .hint, .muted{ color:var(--muted) }
+
+/* 7) Section titles and dividers */
+.section-label{ color:var(--muted); font-weight:600 }
+hr{ border-top:1px solid var(--border) }
+
+/* 8) Timeline chips often render as inline spans ("Last/Best/Target") — normalize */
+.stats, .statline, .summary-chips span{
+  background:var(--chip); color:var(--chip-fg);
+  border:1px solid var(--border); border-radius:999px; padding:.25rem .6rem; display:inline-flex; align-items:center; gap:.35rem;
+}
+
+/* 9) Improve select contrast (esp. dark) */
+select{ color:var(--fg); background:var(--input-bg); border-color:var(--input-border) }
+select:focus-visible{ border-color:var(--focus-ring); box-shadow:var(--focus-ring-shadow) }
