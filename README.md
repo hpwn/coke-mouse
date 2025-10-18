@@ -52,6 +52,12 @@ npm run build
 - An install hint appears when `beforeinstallprompt` fires. You can remove it later if desired.
 - Service worker set to **autoUpdate**; assets & pages cached for offline use.
 
+### PWA debug overlay
+
+- Open the app with `?pwa=debug` (for example: `/coke-mouse/?pwa=debug`).
+- The overlay shows the manifest link, service worker scope/state, caches, and whether `beforeinstallprompt` has fired.
+- If the Install button appears there, click it to manually trigger the install prompt in Chromium-based browsers.
+
 ## Persistence & Export/Import
 
 State is saved in IndexedDB using [localforage](https://github.com/localForage/localForage). Use the **Export JSON** button to download your habits and **Import JSON** to restore them from a file.
