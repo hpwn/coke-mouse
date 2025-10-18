@@ -52,6 +52,11 @@ npm run build
 - An install hint appears when `beforeinstallprompt` fires. You can remove it later if desired.
 - Service worker set to **autoUpdate**; assets & pages cached for offline use.
 
+### Install tips
+
+- Chrome/Edge: use the omnibox **Install** icon or ⋮ → **Install app**.
+- If not visible, open the app with `?pwa=debug` and confirm `manifest link: yes` and `beforeinstallprompt: ready`.
+
 ### PWA debug overlay
 
 - Open the app with `?pwa=debug` (for example: `/coke-mouse/?pwa=debug`).
