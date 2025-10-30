@@ -52,6 +52,12 @@ npm run build
 - An install hint appears when `beforeinstallprompt` fires. You can remove it later if desired.
 - Service worker set to **autoUpdate**; assets & pages cached for offline use.
 
+### Auth (Supabase)
+
+- Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON` in repo secrets or `.env.local`.
+- Email link redirects to `/auth/callback`.
+- Session persists in `localStorage`.
+
 ### Install tips
 
 - Chrome/Edge: use the omnibox **Install** icon or ⋮ → **Install app**.

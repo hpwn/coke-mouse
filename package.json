@@ -26,6 +26,7 @@
     "vitest": "^1.5.0"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
     "localforage": "^1.10.0",
     "uuid": "^11.1.0"
   }
